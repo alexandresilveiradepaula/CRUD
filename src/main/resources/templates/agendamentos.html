@@ -8,14 +8,13 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 </head>
 <body class="bg-light">
-    <!-- Navbar compartilhada (RN04) -->
     <div th:replace="~{fragments/navbar :: navbar('agendamentos')}"></div>
 
     <div class="container-fluid px-4 pb-5">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
                 <h3 class="fw-bold mb-0"><i class="bi bi-calendar-event text-warning me-2"></i>Gestão de Agendamentos</h3>
-                <span class="text-muted small">Atendimentos ordenados cronologicamente por data de agendamento (RN06)</span>
+                <span class="text-muted small">Atendimentos ordenados por data</span>
             </div>
             <button class="btn btn-warning shadow-sm fw-semibold text-dark" data-bs-toggle="modal" data-bs-target="#modalNovoAgendamento">
                 <i class="bi bi-calendar-plus me-1"></i> Novo Agendamento
@@ -25,23 +24,22 @@
         <div th:if="${param.sucesso}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
             <i class="bi bi-check-circle-fill me-2"></i>
             <span th:if="${param.sucesso[0] == 'cadastrado'}">Agendamento registrado com sucesso!</span>
-            <span th:if="${param.sucesso[0] == 'reagendado'}">Data do agendamento atualizada com sucesso no banco de dados (RN06)!</span>
+            <span th:if="${param.sucesso[0] == 'reagendado'}">Data do agendamento atualizada com sucesso!</span>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
 
-        <!-- RN06: Tabela com ordenação por data de agendamento e informações completas -->
         <div class="card shadow-sm border-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-dark">
                         <tr>
-                            <th>Data e Hora (Ordenado)</th>
+                            <th>Data e Hora</th>
                             <th>Status</th>
                             <th>Cliente</th>
                             <th>Contato</th>
                             <th>Equipamento</th>
                             <th>Nº de Série</th>
-                            <th>Observações / Queixa</th>
+                            <th>Observações</th>
                             <th class="text-center">Ações</th>
                         </tr>
                     </thead>
@@ -50,7 +48,6 @@
                             <td colspan="8" class="text-center py-4 text-muted">Nenhum atendimento agendado.</td>
                         </tr>
                         <tr th:each="a : ${agendamentos}">
-                            <!-- Data formatada em padrão legível -->
                             <td class="fw-bold text-primary">
                                 <i class="bi bi-clock me-1"></i>
                                 <span th:text="${#temporals.format(a.dataAgendamento, 'dd/MM/yyyy HH:mm')}">20/11/2026 09:30</span>
@@ -60,13 +57,11 @@
                                       th:classappend="${a.status == 'CONCLUIDO' ? 'bg-success' : (a.status == 'EM_ANALISE' ? 'bg-warning text-dark' : 'bg-info text-dark')}"
                                       th:text="${a.status}">AGENDADO</span>
                             </td>
-                            <!-- Informações do Cliente (RN06) -->
                             <td class="fw-semibold" th:text="${a.cliente.nome}">João da Silva</td>
                             <td>
                                 <small class="text-muted d-block" th:text="${a.cliente.telefone}">(11) 98888-1111</small>
                                 <small class="text-muted d-block" th:text="${a.cliente.email}">joao@email.com</small>
                             </td>
-                            <!-- Informações do Equipamento (RN06) -->
                             <td>
                                 <span class="badge bg-secondary-subtle text-secondary-emphasis" th:text="${a.equipamento.tipo}">Notebook</span>
                                 <span class="fw-semibold" th:text="${a.equipamento.marca + ' ' + a.equipamento.modelo}">Dell Inspiron</span>
@@ -74,7 +69,6 @@
                             <td class="font-monospace text-muted small" th:text="${a.equipamento.numeroSerie != null ? a.equipamento.numeroSerie : '-'}">BR10293847</td>
                             <td class="small text-muted" th:text="${a.observacoes != null ? a.observacoes : '-'}">Troca de pasta térmica</td>
                             <td class="text-center">
-                                <!-- RN06: Atualizar a data de um agendamento existente -->
                                 <button type="button" class="btn btn-sm btn-outline-warning text-dark"
                                         th:data-id="${a.id}"
                                         th:data-data="${a.dataAgendamento}"
@@ -89,11 +83,12 @@
         </div>
     </div>
 
-    <!-- Modal: Reagendar Data do Atendimento (RN06) -->
+    <!-- Modal: Reagendar Data do Atendimento -->
     <div class="modal fade" id="modalReagendar" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <form th:action="@{/agendamentos/reagendar}" method="post">
+                    <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                     <div class="modal-header bg-warning text-dark">
                         <h5 class="modal-title fw-bold"><i class="bi bi-calendar-event me-1"></i> Atualizar Data do Atendimento</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -103,7 +98,6 @@
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Nova Data e Horário *</label>
                             <input type="datetime-local" id="reagendar-data" name="novaData" class="form-control" required>
-                            <div class="form-text small text-muted">A alteração será refletida imediatamente na listagem ordenada.</div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -120,6 +114,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <form th:action="@{/agendamentos/salvar}" method="post">
+                    <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                     <div class="modal-header bg-warning text-dark">
                         <h5 class="modal-title fw-bold"><i class="bi bi-calendar-plus me-1"></i> Cadastrar Novo Atendimento</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -156,7 +151,7 @@
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Observações do Atendimento</label>
+                            <label class="form-label">Observações</label>
                             <textarea name="observacoes" rows="2" class="form-control" placeholder="Descreva os serviços previstos..."></textarea>
                         </div>
                     </div>

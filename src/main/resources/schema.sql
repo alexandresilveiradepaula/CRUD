@@ -1,13 +1,9 @@
--- ========================================================
--- Script DDL: Sistema de Assistência Técnica (schema.sql)
--- ========================================================
-
 DROP TABLE IF EXISTS agendamento;
 DROP TABLE IF EXISTS equipamento;
 DROP TABLE IF EXISTS cliente;
 DROP TABLE IF EXISTS usuario;
 
--- 1. Tabela de Usuários (Operadores do Sistema)
+-- 1. Tabela de Usuários
 CREATE TABLE usuario (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
@@ -16,7 +12,7 @@ CREATE TABLE usuario (
     ultimo_acesso TIMESTAMP
 );
 
--- 2. Tabela de Clientes (CPF armazenado criptografado - RN03)
+-- 2. Tabela de Clientes
 CREATE TABLE cliente (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(150) NOT NULL,
@@ -26,7 +22,7 @@ CREATE TABLE cliente (
     endereco VARCHAR(255)
 );
 
--- 3. Tabela de Equipamentos (Obrigatoriamente vinculado a um cliente - RN07)
+-- 3. Tabela de Equipamentos
 CREATE TABLE equipamento (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     cliente_id BIGINT NOT NULL,
@@ -38,7 +34,7 @@ CREATE TABLE equipamento (
     CONSTRAINT fk_equipamento_cliente FOREIGN KEY (cliente_id) REFERENCES cliente(id) ON DELETE CASCADE
 );
 
--- 4. Tabela de Agendamentos (Ordenados por data - RN06)
+-- 4. Tabela de Agendamentos
 CREATE TABLE agendamento (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     cliente_id BIGINT NOT NULL,

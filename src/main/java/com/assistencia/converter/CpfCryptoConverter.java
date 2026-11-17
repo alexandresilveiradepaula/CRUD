@@ -8,16 +8,10 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
-/**
- * Atende à Regra de Negócio 03 (RN03):
- * O CPF dos clientes deve ser armazenado de forma criptografada no banco de dados.
- * Converte de forma transparente os dados ao persistir e ao recuperar do banco.
- */
 @Converter
 public class CpfCryptoConverter implements AttributeConverter<String, String> {
 
     private static final String ALGORITHM = "AES/ECB/PKCS5Padding";
-    // Chave de 128-bit (16 bytes) para criptografia AES simétrica
     private static final byte[] SECRET_KEY = "MinhaChaveSec123".getBytes(StandardCharsets.UTF_8);
 
     @Override
@@ -48,7 +42,6 @@ public class CpfCryptoConverter implements AttributeConverter<String, String> {
             byte[] decodedBytes = Base64.getDecoder().decode(dbData.trim());
             return new String(cipher.doFinal(decodedBytes), StandardCharsets.UTF_8);
         } catch (Exception e) {
-            // Se o dado não estiver cifrado (por exemplo, migração legada), retorna o dado original
             return dbData;
         }
     }

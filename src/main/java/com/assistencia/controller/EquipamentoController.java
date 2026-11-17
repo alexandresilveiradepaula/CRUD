@@ -1,9 +1,7 @@
 package com.assistencia.controller;
 
-import com.assistencia.model.Cliente;
-import com.assistencia.model.Equipamento;
-import com.assistencia.repository.ClienteRepository;
-import com.assistencia.repository.EquipamentoRepository;
+import com.assistencia.service.ClienteService;
+import com.assistencia.service.EquipamentoService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -12,22 +10,21 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/equipamentos")
 public class EquipamentoController {
 
-    private final EquipamentoRepository equipamentoRepository;
-    private final ClienteRepository clienteRepository;
+    private final EquipamentoService equipamentoService;
+    private final ClienteService clienteService;
 
-    public EquipamentoController(EquipamentoRepository equipamentoRepository, ClienteRepository clienteRepository) {
-        this.equipamentoRepository = equipamentoRepository;
-        this.clienteRepository = clienteRepository;
+    public EquipamentoController(EquipamentoService equipamentoService, ClienteService clienteService) {
+        this.equipamentoService = equipamentoService;
+        this.clienteService = clienteService;
     }
 
     @GetMapping
     public String listar(Model model) {
-        model.addAttribute("equipamentos", equipamentoRepository.findAll());
-        model.addAttribute("clientes", clienteRepository.findAll());
+        model.addAttribute("equipamentos", equipamentoService.listarTodos());
+        model.addAttribute("clientes", clienteService.listarTodos());
         return "equipamentos";
     }
 
-    // RN07: Obrigatoriamente associar o equipamento a um cliente previamente cadastrado
     @PostMapping("/salvar")
     public String salvar(@RequestParam("clienteId") Long clienteId,
                          @RequestParam("tipo") String tipo,
@@ -36,12 +33,7 @@ public class EquipamentoController {
                          @RequestParam(value = "numeroSerie", required = false) String numeroSerie,
                          @RequestParam(value = "defeitoDeclarado", required = false) String defeitoDeclarado) {
 
-        Cliente cliente = clienteRepository.findById(clienteId)
-                .orElseThrow(() -> new IllegalArgumentException("Cliente obrigatório não encontrado: " + clienteId));
-
-        Equipamento equipamento = new Equipamento(cliente, tipo, marca, modelo, numeroSerie, defeitoDeclarado);
-        equipamentoRepository.save(equipamento);
-
+        equipamentoService.salvar(clienteId, tipo, marca, modelo, numeroSerie, defeitoDeclarado);
         return "redirect:/equipamentos?sucesso=true";
     }
 }

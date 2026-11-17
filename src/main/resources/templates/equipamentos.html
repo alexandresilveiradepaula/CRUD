@@ -8,14 +8,13 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 </head>
 <body class="bg-light">
-    <!-- Navbar compartilhada (RN04) -->
     <div th:replace="~{fragments/navbar :: navbar('equipamentos')}"></div>
 
     <div class="container pb-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h3 class="fw-bold mb-0"><i class="bi bi-laptop text-success me-2"></i>Gestão de Equipamentos</h3>
-                <span class="text-muted small">Controle de aparelhos recebidos para assistência</span>
+                <span class="text-muted small">Controle de aparelhos e vinculação aos clientes</span>
             </div>
             <button class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNovoEquipamento">
                 <i class="bi bi-plus-circle me-1"></i> Novo Equipamento
@@ -24,11 +23,10 @@
 
         <div th:if="${param.sucesso}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
             <i class="bi bi-check-circle-fill me-2"></i>
-            Equipamento cadastrado com sucesso e associado ao cliente!
+            Equipamento cadastrado com sucesso!
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
 
-        <!-- Tabela de Equipamentos -->
         <div class="card shadow-sm border-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
@@ -38,7 +36,7 @@
                             <th>Tipo</th>
                             <th>Marca / Modelo</th>
                             <th>Número de Série</th>
-                            <th>Cliente Proprietário (RN07)</th>
+                            <th>Cliente Proprietário</th>
                             <th>Defeito Declarado</th>
                         </tr>
                     </thead>
@@ -58,7 +56,7 @@
                                 <span class="fw-semibold text-primary" th:text="${e.cliente.nome}">João da Silva</span>
                                 <small class="text-muted d-block" th:text="${e.cliente.telefone}">(11) 98888-1111</small>
                             </td>
-                            <td class="small text-muted" th:text="${e.defeitoDeclarado != null ? e.defeitoDeclarado : 'Sem observações iniciais'}">
+                            <td class="small text-muted" th:text="${e.defeitoDeclarado != null ? e.defeitoDeclarado : 'Sem observações'}">
                                 Tela piscando
                             </td>
                         </tr>
@@ -68,32 +66,29 @@
         </div>
     </div>
 
-    <!-- Modal: Cadastro de Novo Equipamento (RN07) -->
+    <!-- Modal: Cadastro de Novo Equipamento -->
     <div class="modal fade" id="modalNovoEquipamento" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <form th:action="@{/equipamentos/salvar}" method="post">
+                    <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                     <div class="modal-header bg-success text-white">
                         <h5 class="modal-title"><i class="bi bi-laptop me-1"></i> Cadastrar Novo Equipamento</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <!-- RN07: Associação OBRIGATÓRIA a um cliente previamente cadastrado -->
                         <div class="mb-3">
-                            <label for="clienteId" class="form-label fw-bold text-danger">
-                                <i class="bi bi-person-check me-1"></i> Cliente Proprietário (Obrigatório - RN07) *
+                            <label for="clienteId" class="form-label fw-bold">
+                                <i class="bi bi-person-check me-1"></i> Cliente Proprietário *
                             </label>
                             <select id="clienteId" name="clienteId" class="form-select border-primary" required>
-                                <option value="" disabled selected>-- Selecione um cliente cadastrado --</option>
+                                <option value="" disabled selected>-- Selecione o cliente proprietário --</option>
                                 <option th:each="c : ${clientes}" 
                                         th:value="${c.id}" 
                                         th:text="${c.nome + ' | Tel: ' + c.telefone}">
                                     João da Silva | Tel: (11) 98888-1111
                                 </option>
                             </select>
-                            <div class="form-text text-muted small">
-                                O equipamento precisa obrigatoriamente estar vinculado a um cliente pré-existente.
-                            </div>
                         </div>
 
                         <div class="row g-3 mb-3">
@@ -119,8 +114,8 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Defeito Declarado pelo Cliente</label>
-                            <textarea name="defeitoDeclarado" rows="3" class="form-control" placeholder="Descreva os sintomas relatados pelo cliente..."></textarea>
+                            <label class="form-label">Defeito Declarado</label>
+                            <textarea name="defeitoDeclarado" rows="3" class="form-control" placeholder="Descreva os problemas relatados..."></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
