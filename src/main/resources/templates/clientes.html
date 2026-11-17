@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clientes - TechAssist</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+    <!-- Navbar compartilhada (RN04) -->
+    <div th:replace="~{fragments/navbar :: navbar('clientes')}"></div>
+
+    <div class="container pb-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h3 class="fw-bold mb-0"><i class="bi bi-people text-primary me-2"></i>Gestão de Clientes</h3>
+                <span class="text-muted small">Pesquise, cadastre e edite clientes com dados protegidos (LGPD)</span>
+            </div>
+            <button class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNovoCliente">
+                <i class="bi bi-person-plus me-1"></i> Novo Cliente
+            </button>
+        </div>
+
+        <!-- Alertas de Sucesso -->
+        <div th:if="${param.sucesso}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <span th:if="${param.sucesso[0] == 'cadastrado'}">Cliente cadastrado com sucesso!</span>
+            <span th:if="${param.sucesso[0] == 'editado'}">Dados do cliente atualizados com sucesso no banco de dados!</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- RN05: Recurso de busca por termo confirmado -->
+        <div class="card p-3 mb-4 shadow-sm border-0">
+            <form th:action="@{/clientes}" method="get" class="row g-2 align-items-center">
+                <div class="col-md-9">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" name="termo" class="form-control" 
+                               placeholder="Digite o termo de pesquisa (nome, e-mail ou telefone)..." 
+                               th:value="${termoBusca}">
+                    </div>
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <!-- Confirmação explícita da pesquisa -->
+                    <button type="submit" class="btn btn-primary flex-grow-1 shadow-sm">
+                        <i class="bi bi-check2-circle me-1"></i> Pesquisar
+                    </button>
+                    <a th:href="@{/clientes}" class="btn btn-outline-secondary" title="Limpar pesquisa e listar todos">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tabela de Listagem de Clientes -->
+        <div class="card shadow-sm border-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome do Cliente</th>
+                            <th>CPF (Criptografado / LGPD)</th>
+                            <th>Telefone</th>
+                            <th>E-mail</th>
+                            <th>Endereço</th>
+                            <th class="text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(clientes)}">
+                            <td colspan="7" class="text-center text-muted py-4">Nenhum cliente encontrado para o filtro informado.</td>
+                        </tr>
+                        <tr th:each="c : ${clientes}">
+                            <td class="fw-semibold text-secondary" th:text="${c.id}">1</td>
+                            <td class="fw-bold text-dark" th:text="${c.nome}">Nome Cliente</td>
+                            <td>
+                                <!-- RN03: Proteção de CPF - Exibição com máscara segura -->
+                                <span class="badge bg-secondary-subtle text-secondary-emphasis font-monospace"
+                                      th:text="${c.cpf != null && c.cpf.length() >= 11} ? '***.***.' + ${#strings.substring(c.cpf, 7, 9)} + '-**' : '***.***.***-**'">
+                                    ***.***.01-**
+                                </span>
+                            </td>
+                            <td th:text="${c.telefone}">(11) 98888-1111</td>
+                            <td th:text="${c.email}">cliente@email.com</td>
+                            <td class="small text-muted" th:text="${c.endereco}">Rua das Flores, 123</td>
+                            <td class="text-center">
+                                <!-- RN05: Botão para editar cliente existente -->
+                                <button type="button" class="btn btn-sm btn-outline-primary"
+                                        th:data-id="${c.id}"
+                                        th:data-nome="${c.nome}"
+                                        th:data-telefone="${c.telefone}"
+                                        th:data-email="${c.email}"
+                                        th:data-endereco="${c.endereco}"
+                                        onclick="carregarModalEdicao(this)">
+                                    <i class="bi bi-pencil-square me-1"></i> Editar
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Cadastro de Novo Cliente (RN03) -->
+    <div class="modal fade" id="modalNovoCliente" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form th:action="@{/clientes/salvar}" method="post">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title"><i class="bi bi-person-plus me-1"></i> Cadastrar Novo Cliente</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Nome Completo *</label>
+                            <input type="text" name="nome" class="form-control" required placeholder="ex: Maria Oliveira">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">CPF * (Será criptografado no banco)</label>
+                            <input type="text" name="cpf" class="form-control" required placeholder="000.000.000-00">
+                            <div class="form-text text-muted small">Dado protegido com criptografia AES conforme LGPD.</div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Telefone</label>
+                                <input type="text" name="telefone" class="form-control" placeholder="(11) 99999-9999">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">E-mail</label>
+                                <input type="email" name="email" class="form-control" placeholder="nome@email.com">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Endereço</label>
+                            <input type="text" name="endereco" class="form-control" placeholder="Rua, Número, Bairro">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success"><i class="bi bi-check-lg me-1"></i> Salvar Cliente</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Edição de Cliente (RN05) -->
+    <div class="modal fade" id="modalEditarCliente" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form th:action="@{/clientes/editar}" method="post">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title"><i class="bi bi-pencil-square me-1"></i> Editar Dados do Cliente</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="edit-id" name="id">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Nome Completo *</label>
+                            <input type="text" id="edit-nome" name="nome" class="form-control" required>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Telefone</label>
+                                <input type="text" id="edit-telefone" name="telefone" class="form-control">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">E-mail</label>
+                                <input type="email" id="edit-email" name="email" class="form-control">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Endereço</label>
+                            <input type="text" id="edit-endereco" name="endereco" class="form-control">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> Salvar Alterações</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function carregarModalEdicao(btn) {
+            document.getElementById('edit-id').value = btn.getAttribute('data-id');
+            document.getElementById('edit-nome').value = btn.getAttribute('data-nome');
+            document.getElementById('edit-telefone').value = btn.getAttribute('data-telefone');
+            document.getElementById('edit-email').value = btn.getAttribute('data-email');
+            document.getElementById('edit-endereco').value = btn.getAttribute('data-endereco') || '';
+            new bootstrap.Modal(document.getElementById('modalEditarCliente')).show();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<nav th:fragment="navbar(activeTab)" class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold d-flex align-items-center" th:href="@{/dashboard}">
+            <i class="bi bi-tools text-warning me-2 fs-4"></i>
+            <span>TechAssist</span>
+        </a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navMenu">
+            <!-- Menus dos recursos do sistema (RN04) -->
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" th:classappend="${activeTab == 'dashboard'} ? 'active fw-bold' : ''" th:href="@{/dashboard}">
+                        <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:classappend="${activeTab == 'clientes'} ? 'active fw-bold' : ''" th:href="@{/clientes}">
+                        <i class="bi bi-people me-1"></i> Clientes
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:classappend="${activeTab == 'equipamentos'} ? 'active fw-bold' : ''" th:href="@{/equipamentos}">
+                        <i class="bi bi-laptop me-1"></i> Equipamentos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:classappend="${activeTab == 'agendamentos'} ? 'active fw-bold' : ''" th:href="@{/agendamentos}">
+                        <i class="bi bi-calendar-check me-1"></i> Agendamentos
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Exibição do Usuário Logado e Opção de Logout (RN04) -->
+            <div class="d-flex align-items-center text-white">
+                <span class="me-3 small">
+                    <i class="bi bi-person-circle text-info me-1 fs-5 align-middle"></i>
+                    Operador: <strong class="text-light" sec:authentication="name">Usuário</strong>
+                </span>
+                
+                <form th:action="@{/logout}" method="post" class="d-inline m-0">
+                    <button type="submit" class="btn btn-outline-danger btn-sm px-3">
+                        <i class="bi bi-box-arrow-right me-1"></i> Sair
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</nav>
+</html>

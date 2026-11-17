@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - TechAssist</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+    <!-- RN04: Fragmento de Navegação com exibição de usuário, menus e logout -->
+    <div th:replace="~{fragments/navbar :: navbar('dashboard')}"></div>
+
+    <div class="container pb-5">
+        <!-- Saudação com Nome do Usuário Logado (RN04) -->
+        <div class="p-4 mb-4 bg-white rounded-3 shadow-sm border-start border-4 border-primary">
+            <h2 class="fw-bold text-dark mb-1">
+                Bem-vindo(a), <span th:text="${nomeUsuario}" class="text-primary">Operador</span>!
+            </h2>
+            <p class="text-muted mb-0">Sistema de Gestão de Ordens de Atendimento e Equipamentos Eletrônicos</p>
+        </div>
+
+        <!-- Cards de Acesso aos Recursos (RN04) -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="p-3 bg-primary bg-opacity-10 text-primary rounded-3 me-3 fs-3">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <div>
+                            <span class="text-muted small">Clientes Cadastrados</span>
+                            <h3 class="fw-bold mb-0" th:text="${totalClientes}">0</h3>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-0 pt-0">
+                        <a th:href="@{/clientes}" class="btn btn-sm btn-outline-primary w-100">
+                            Acessar Clientes <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="p-3 bg-success bg-opacity-10 text-success rounded-3 me-3 fs-3">
+                            <i class="bi bi-laptop"></i>
+                        </div>
+                        <div>
+                            <span class="text-muted small">Equipamentos Registrados</span>
+                            <h3 class="fw-bold mb-0" th:text="${totalEquipamentos}">0</h3>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-0 pt-0">
+                        <a th:href="@{/equipamentos}" class="btn btn-sm btn-outline-success w-100">
+                            Acessar Equipamentos <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="p-3 bg-warning bg-opacity-10 text-warning rounded-3 me-3 fs-3">
+                            <i class="bi bi-calendar-check"></i>
+                        </div>
+                        <div>
+                            <span class="text-muted small">Total de Agendamentos</span>
+                            <h3 class="fw-bold mb-0" th:text="${totalAgendamentos}">0</h3>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-0 pt-0">
+                        <a th:href="@{/agendamentos}" class="btn btn-sm btn-outline-warning text-dark w-100">
+                            Acessar Agendamentos <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Próximos Atendimentos em Destaque -->
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0"><i class="bi bi-clock-history text-primary me-2"></i>Próximos Atendimentos</h5>
+                <a th:href="@{/agendamentos}" class="btn btn-sm btn-primary">Ver Todos</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Data/Hora</th>
+                            <th>Status</th>
+                            <th>Cliente</th>
+                            <th>Equipamento</th>
+                            <th>Observação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(proximosAgendamentos)}">
+                            <td colspan="5" class="text-center py-4 text-muted">Nenhum atendimento na fila.</td>
+                        </tr>
+                        <tr th:each="a : ${proximosAgendamentos}">
+                            <td class="fw-semibold text-primary" th:text="${#temporals.format(a.dataAgendamento, 'dd/MM/yyyy HH:mm')}">
+                                20/11/2026 10:00
+                            </td>
+                            <td>
+                                <span class="badge bg-info text-dark" th:text="${a.status}">AGENDADO</span>
+                            </td>
+                            <td th:text="${a.cliente.nome}">Nome do Cliente</td>
+                            <td th:text="${a.equipamento.tipo + ' - ' + a.equipamento.marca + ' ' + a.equipamento.modelo}">Notebook Dell</td>
+                            <td class="small text-muted" th:text="${a.observacoes}">Observação</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendamentos - TechAssist</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+    <!-- Navbar compartilhada (RN04) -->
+    <div th:replace="~{fragments/navbar :: navbar('agendamentos')}"></div>
+
+    <div class="container-fluid px-4 pb-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h3 class="fw-bold mb-0"><i class="bi bi-calendar-event text-warning me-2"></i>Gestão de Agendamentos</h3>
+                <span class="text-muted small">Atendimentos ordenados cronologicamente por data de agendamento (RN06)</span>
+            </div>
+            <button class="btn btn-warning shadow-sm fw-semibold text-dark" data-bs-toggle="modal" data-bs-target="#modalNovoAgendamento">
+                <i class="bi bi-calendar-plus me-1"></i> Novo Agendamento
+            </button>
+        </div>
+
+        <div th:if="${param.sucesso}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <span th:if="${param.sucesso[0] == 'cadastrado'}">Agendamento registrado com sucesso!</span>
+            <span th:if="${param.sucesso[0] == 'reagendado'}">Data do agendamento atualizada com sucesso no banco de dados (RN06)!</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- RN06: Tabela com ordenação por data de agendamento e informações completas -->
+        <div class="card shadow-sm border-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Data e Hora (Ordenado)</th>
+                            <th>Status</th>
+                            <th>Cliente</th>
+                            <th>Contato</th>
+                            <th>Equipamento</th>
+                            <th>Nº de Série</th>
+                            <th>Observações / Queixa</th>
+                            <th class="text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(agendamentos)}">
+                            <td colspan="8" class="text-center py-4 text-muted">Nenhum atendimento agendado.</td>
+                        </tr>
+                        <tr th:each="a : ${agendamentos}">
+                            <!-- Data formatada em padrão legível -->
+                            <td class="fw-bold text-primary">
+                                <i class="bi bi-clock me-1"></i>
+                                <span th:text="${#temporals.format(a.dataAgendamento, 'dd/MM/yyyy HH:mm')}">20/11/2026 09:30</span>
+                            </td>
+                            <td>
+                                <span class="badge" 
+                                      th:classappend="${a.status == 'CONCLUIDO' ? 'bg-success' : (a.status == 'EM_ANALISE' ? 'bg-warning text-dark' : 'bg-info text-dark')}"
+                                      th:text="${a.status}">AGENDADO</span>
+                            </td>
+                            <!-- Informações do Cliente (RN06) -->
+                            <td class="fw-semibold" th:text="${a.cliente.nome}">João da Silva</td>
+                            <td>
+                                <small class="text-muted d-block" th:text="${a.cliente.telefone}">(11) 98888-1111</small>
+                                <small class="text-muted d-block" th:text="${a.cliente.email}">joao@email.com</small>
+                            </td>
+                            <!-- Informações do Equipamento (RN06) -->
+                            <td>
+                                <span class="badge bg-secondary-subtle text-secondary-emphasis" th:text="${a.equipamento.tipo}">Notebook</span>
+                                <span class="fw-semibold" th:text="${a.equipamento.marca + ' ' + a.equipamento.modelo}">Dell Inspiron</span>
+                            </td>
+                            <td class="font-monospace text-muted small" th:text="${a.equipamento.numeroSerie != null ? a.equipamento.numeroSerie : '-'}">BR10293847</td>
+                            <td class="small text-muted" th:text="${a.observacoes != null ? a.observacoes : '-'}">Troca de pasta térmica</td>
+                            <td class="text-center">
+                                <!-- RN06: Atualizar a data de um agendamento existente -->
+                                <button type="button" class="btn btn-sm btn-outline-warning text-dark"
+                                        th:data-id="${a.id}"
+                                        th:data-data="${a.dataAgendamento}"
+                                        onclick="carregarModalReagendamento(this)">
+                                    <i class="bi bi-calendar-event me-1"></i> Reagendar
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Reagendar Data do Atendimento (RN06) -->
+    <div class="modal fade" id="modalReagendar" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form th:action="@{/agendamentos/reagendar}" method="post">
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title fw-bold"><i class="bi bi-calendar-event me-1"></i> Atualizar Data do Atendimento</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="reagendar-id" name="id">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Nova Data e Horário *</label>
+                            <input type="datetime-local" id="reagendar-data" name="novaData" class="form-control" required>
+                            <div class="form-text small text-muted">A alteração será refletida imediatamente na listagem ordenada.</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-warning fw-semibold text-dark"><i class="bi bi-check-lg me-1"></i> Salvar Reagendamento</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Novo Agendamento -->
+    <div class="modal fade" id="modalNovoAgendamento" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form th:action="@{/agendamentos/salvar}" method="post">
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title fw-bold"><i class="bi bi-calendar-plus me-1"></i> Cadastrar Novo Atendimento</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Cliente *</label>
+                                <select name="clienteId" class="form-select" required>
+                                    <option value="" disabled selected>-- Selecione o Cliente --</option>
+                                    <option th:each="c : ${clientes}" th:value="${c.id}" th:text="${c.nome}">Cliente</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Equipamento *</label>
+                                <select name="equipamentoId" class="form-select" required>
+                                    <option value="" disabled selected>-- Selecione o Equipamento --</option>
+                                    <option th:each="e : ${equipamentos}" th:value="${e.id}" th:text="${e.tipo + ' - ' + e.marca + ' ' + e.modelo + ' (Proprietário: ' + e.cliente.nome + ')'}">Equipamento</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Data e Hora *</label>
+                                <input type="datetime-local" name="dataAgendamento" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Status Inicial</label>
+                                <select name="status" class="form-select">
+                                    <option value="AGENDADO" selected>AGENDADO</option>
+                                    <option value="EM_ANALISE">EM_ANALISE</option>
+                                    <option value="AGUARDANDO_PECA">AGUARDANDO_PECA</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Observações do Atendimento</label>
+                            <textarea name="observacoes" rows="2" class="form-control" placeholder="Descreva os serviços previstos..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-warning fw-semibold text-dark"><i class="bi bi-save me-1"></i> Agendar Atendimento</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function carregarModalReagendamento(btn) {
+            document.getElementById('reagendar-id').value = btn.getAttribute('data-id');
+            const dataIso = btn.getAttribute('data-data');
+            if (dataIso) {
+                document.getElementById('reagendar-data').value = dataIso.substring(0, 16);
+            }
+            new bootstrap.Modal(document.getElementById('modalReagendar')).show();
+        }
+    </script>
+</body>
+</html>
