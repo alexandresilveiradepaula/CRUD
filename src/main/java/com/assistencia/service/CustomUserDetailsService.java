@@ -10,7 +10,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -23,17 +22,16 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Usuario usuario = usuarioRepository.findByLogin(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado: " + username));
-
-        try {
-            usuario.setUltimoAcesso(LocalDateTime.now());
-            usuarioRepository.save(usuario);
-        } catch (Exception ignored) {
-            // Não impede a autenticação caso a atualização de auditoria falhe
+        if (username == null || username.isBlank()) {
+            throw new UsernameNotFoundException("Nome de usuário não informado.");
         }
+
+        String login = username.trim();
+        Usuario usuario = usuarioRepository.findByLogin(login)
+                .orElseGet(() -> usuarioRepository.findByLoginIgnoreCase(login)
+                        .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado: " + login)));
 
         return new User(
                 usuario.getLogin(),
